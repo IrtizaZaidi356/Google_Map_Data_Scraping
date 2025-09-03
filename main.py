@@ -325,7 +325,6 @@ def scrape_places_streamlit(user_input:str, headless:bool, show_system_chrome:bo
         if "q" in qs:
             search_title = qs["q"][0]
         else:
-            # /search/... pattern se extract
             match = re.search(r"/maps/search/([^/?]+)", user_input)
             search_title = urllib.parse.unquote(match.group(1)) if match else "google_maps_results"
     else:
@@ -335,16 +334,18 @@ def scrape_places_streamlit(user_input:str, headless:bool, show_system_chrome:bo
 
     # 🚀 Streamlit Cloud fix: Always force headless in cloud
     IS_STREAMLIT_CLOUD = os.environ.get("STREAMLIT_RUNTIME", "") != ""
-
     launch_headless = True if IS_STREAMLIT_CLOUD else headless
 
-    if show_system_chrome:
-        try:
-            browser = p.chromium.launch(channel="chrome", headless=launch_headless)
-        except:
+    with sync_playwright() as p:
+        if show_system_chrome:
+            try:
+                browser = p.chromium.launch(channel="chrome", headless=launch_headless)
+            except:
+                # Fallback: Playwright ka bundled Chromium
+                browser = p.chromium.launch(headless=launch_headless)
+        else:
             browser = p.chromium.launch(headless=launch_headless)
-    else:
-        browser = p.chromium.launch(headless=launch_headless)
+
 
     with sync_playwright() as p:
         if show_system_chrome:
@@ -637,3 +638,4 @@ if stop:
 # - This tool is for educational/demo use. Respect websites’ terms and local laws.
 #         """
 #     )
+
