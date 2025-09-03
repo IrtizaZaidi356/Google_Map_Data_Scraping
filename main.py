@@ -347,17 +347,17 @@ def scrape_places_streamlit(user_input:str, headless:bool, show_system_chrome:bo
             browser = p.chromium.launch(headless=launch_headless)
 
 
-    with sync_playwright() as p:
-        if show_system_chrome:
-            try:
-                browser = p.chromium.launch(channel="chrome", headless=headless)
-            except:
-                # Fallback: Playwright ka bundled Chromium
-                browser = p.chromium.launch(headless=headless)
-        else:
-            browser = p.chromium.launch(headless=headless)
-        context=browser.new_context()
-        page=context.new_page()
+    # with sync_playwright() as p:
+    #     if show_system_chrome:
+    #         try:
+    #             browser = p.chromium.launch(channel="chrome", headless=headless)
+    #         except:
+    #             # Fallback: Playwright ka bundled Chromium
+    #             browser = p.chromium.launch(headless=headless)
+    #     else:
+    #         browser = p.chromium.launch(headless=headless)
+    #     context=browser.new_context()
+    #     page=context.new_page()
         if "http" not in user_input: url=f"https://www.google.com/maps/search/{urllib.parse.quote(user_input)}"
         else: url=user_input
         page.goto(url)
@@ -638,4 +638,5 @@ if stop:
 # - This tool is for educational/demo use. Respect websites’ terms and local laws.
 #         """
 #     )
+
 
