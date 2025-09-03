@@ -482,20 +482,49 @@ def scrape_places_streamlit(user_input:str, headless:bool, show_system_chrome:bo
 # Streamlit UI elements
 # ----------------------------
 st.title("🗺️ Google Maps Scraper")
-st.sidebar.header("Settings")
+st.sidebar.header("⚙️ Scraper Settings")
+
+# Query input
 user_input = st.sidebar.text_input(
-    "Enter Google Maps search query or full URL", 
+    "🔍 Enter Google Maps search query or full URL",
     placeholder="e.g. dentists in Karachi OR https://www.google.com/maps/..."
 )
-headless=st.sidebar.checkbox("Run headless",value=True)
-use_system_chrome=st.sidebar.checkbox("Use system Chrome",value=True)
-max_listings=st.sidebar.number_input("Max listings (0=unlimited)",min_value=0,value=10,step=1)
-scroll_delay=st.sidebar.number_input("Scroll delay per listing (seconds)",min_value=0.1,value=1.0,step=0.1)
-# Sidebar mai 2 columns banate hain
-col_btn = st.sidebar.columns(2) 
-start= col_btn[0].button("▶️ Start")
-stop= col_btn[1].button("🛑 Stop", type="secondary")
-st.session_state.setdefault("stop",False)
+
+# Detect environment (local vs cloud)
+on_cloud = os.environ.get("STREAMLIT_RUNTIME") is not None  
+
+# Headless toggle (forced ON in cloud)
+if on_cloud:
+    headless = True
+    st.sidebar.checkbox("Run headless", value=True, disabled=True, help="Always ON in Streamlit Cloud")
+else:
+    headless = st.sidebar.checkbox("Run headless", value=True, help="Uncheck to see browser window")
+
+# System Chrome toggle
+use_system_chrome = st.sidebar.checkbox(
+    "Use system Chrome", 
+    value=False, 
+    disabled=on_cloud, 
+    help="Disabled in cloud environment"
+)
+
+# Max listings
+max_listings = st.sidebar.number_input(
+    "📋 Max listings (0=unlimited)", 
+    min_value=0, value=10, step=1
+)
+
+# Scroll delay
+scroll_delay = st.sidebar.number_input(
+    "⏱️ Scroll delay per listing (seconds)", 
+    min_value=0.1, value=1.0, step=0.1
+)
+
+# Sidebar buttons
+col_btn = st.sidebar.columns(2)
+start = col_btn[0].button("▶️ Start")
+stop = col_btn[1].button("🛑 Stop", type="secondary")
+st.session_state.setdefault("stop", False)
 
 def should_stop(): 
     return st.session_state.stop
@@ -622,3 +651,4 @@ if stop:
 # - This tool is for educational/demo use. Respect websites’ terms and local laws.
 #         """
 #     )
+
