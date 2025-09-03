@@ -331,7 +331,14 @@ def scrape_places_streamlit(user_input:str, headless:bool, show_system_chrome:bo
 
     output_filename = sanitize_filename(search_title) + ".csv"
     with sync_playwright() as p:
-        browser=p.chromium.launch(headless=headless,channel="chrome" if show_system_chrome else None)
+        if show_system_chrome:
+            try:
+                browser = p.chromium.launch(channel="chrome", headless=headless)
+            except:
+                # Fallback: Playwright ka bundled Chromium
+                browser = p.chromium.launch(headless=headless)
+        else:
+            browser = p.chromium.launch(headless=headless)
         context=browser.new_context()
         page=context.new_page()
         if "http" not in user_input: url=f"https://www.google.com/maps/search/{urllib.parse.quote(user_input)}"
