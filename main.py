@@ -328,28 +328,38 @@ def scrape_places_streamlit(
 ):
     places = []
 
-    # Detect Streamlit Cloud (no GUI available)
-    IS_STREAMLIT_CLOUD = os.environ.get("STREAMLIT_RUNTIME", "") != ""
-
-    # ✅ Force headless=True in Streamlit Cloud (ignore user checkbox)
-    if IS_STREAMLIT_CLOUD:
-        launch_headless = True
-    else:
-        launch_headless = headless
-
     with sync_playwright() as p:
-        launch_args = ["--no-sandbox", "--disable-setuid-sandbox"]
+    # Safe args for Cloud
+    launch_args = [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--disable-software-rasterizer"
+    ]
 
-        if show_system_chrome:
-            try:
-                browser = p.chromium.launch(channel="chrome", headless=launch_headless, args=launch_args)
-            except:
-                browser = p.chromium.launch(headless=launch_headless, args=launch_args)
-        else:
-            browser = p.chromium.launch(headless=launch_headless, args=launch_args)
+    # Detect Streamlit Cloud
+    IS_STREAMLIT_CLOUD = os.environ.get("STREAMLIT_RUNTIME", "") != ""
+    launch_headless = True if IS_STREAMLIT_CLOUD else headless
 
-        context = browser.new_context()
-        page = context.new_page()
+    if show_system_chrome:
+        try:
+            browser = p.chromium.launch(
+                channel="chrome",
+                headless=launch_headless,
+                args=launch_args
+            )
+        except:
+            browser = p.chromium.launch(
+                headless=launch_headless,
+                args=launch_args
+            )
+    else:
+        browser = p.chromium.launch(
+            headless=launch_headless,
+            args=launch_args
+        )
+
 
 
 
@@ -644,6 +654,7 @@ if stop:
 # - This tool is for educational/demo use. Respect websites’ terms and local laws.
 #         """
 #     )
+
 
 
 
