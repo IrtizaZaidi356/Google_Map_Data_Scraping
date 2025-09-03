@@ -317,8 +317,17 @@ def go_to_next_results_page(page: Page, log: Callable[[str,str],None]) -> bool:
 # ----------------------------
 # Main scraping function
 # ----------------------------
-def scrape_places_streamlit(user_input:str, headless:bool, show_system_chrome:bool, max_listings:int, scroll_delay:float, should_stop:Callable, log:Callable[[str,str],None]):
-    places=[]
+def scrape_places_streamlit(
+    user_input: str,
+    headless: bool,
+    show_system_chrome: bool,
+    max_listings: int,
+    scroll_delay: float,
+    should_stop: Callable,
+    log: Callable[[str, str], None]
+):
+    places = []
+
     if user_input.startswith("http"):
         parsed = urllib.parse.urlparse(user_input)
         qs = urllib.parse.parse_qs(parsed.query)
@@ -332,19 +341,37 @@ def scrape_places_streamlit(user_input:str, headless:bool, show_system_chrome:bo
 
     output_filename = sanitize_filename(search_title) + ".csv"
 
-    # 🚀 Streamlit Cloud fix: Always force headless in cloud
+    # ✅ Detect Streamlit Cloud
     IS_STREAMLIT_CLOUD = os.environ.get("STREAMLIT_RUNTIME", "") != ""
+
+    # ✅ Force headless True if running in Streamlit Cloud
     launch_headless = True if IS_STREAMLIT_CLOUD else headless
 
+    # ✅ Playwright open here
     with sync_playwright() as p:
+        launch_args = ["--no-sandbox", "--disable-setuid-sandbox"]
+
         if show_system_chrome:
             try:
-                browser = p.chromium.launch(channel="chrome", headless=launch_headless)
+                browser = p.chromium.launch(
+                    channel="chrome",
+                    headless=launch_headless,
+                    args=launch_args
+                )
             except:
-                # Fallback: Playwright ka bundled Chromium
-                browser = p.chromium.launch(headless=launch_headless)
+                browser = p.chromium.launch(
+                    headless=launch_headless,
+                    args=launch_args
+                )
         else:
-            browser = p.chromium.launch(headless=launch_headless)
+            browser = p.chromium.launch(
+                headless=launch_headless,
+                args=launch_args
+            )
+
+        context = browser.new_context()
+        page = context.new_page()
+
 
 
     # with sync_playwright() as p:
@@ -638,5 +665,6 @@ if stop:
 # - This tool is for educational/demo use. Respect websites’ terms and local laws.
 #         """
 #     )
+
 
 
