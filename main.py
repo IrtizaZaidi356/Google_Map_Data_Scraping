@@ -64,13 +64,13 @@ st.markdown("""
 
 import os
 
-on_cloud = os.environ.get("STREAMLIT_RUNTIME") is not None  
+# on_cloud = os.environ.get("STREAMLIT_RUNTIME") is not None  
 
-if on_cloud:
-    headless = True
-    st.sidebar.checkbox("Run headless", value=True, disabled=True, help="Always ON in Streamlit Cloud")
-else:
-    headless = st.sidebar.checkbox("Run headless", value=True, help="Uncheck to see browser window")
+# if on_cloud:
+#     headless = True
+#     st.sidebar.checkbox("Run headless", value=True, disabled=True, help="Always ON in Streamlit Cloud")
+# else:
+#     headless = st.sidebar.checkbox("Run headless", value=True, help="Uncheck to see browser window")
 
 # ----------------------------
 # Dataclass for Place
@@ -661,5 +661,6 @@ if stop:
 # - This tool is for educational/demo use. Respect websites’ terms and local laws.
 #         """
 #     )
+
 
 
