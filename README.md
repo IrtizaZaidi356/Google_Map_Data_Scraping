@@ -1,7 +1,7 @@
 # 🗺️ Google Maps Scraper (Streamlit + Playwright + Python)
 
 A **Streamlit web app** to scrape business details from **Google Maps** using **Playwright automation**.  
-It extracts clean, structured data from Google Maps listings and lets you **download results** as CSV.
+It extracts clean, structured data from Google Maps listings and lets you **download results** as Excel & CSV.
 
 ---
 
