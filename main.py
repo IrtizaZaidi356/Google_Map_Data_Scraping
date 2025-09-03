@@ -328,46 +328,25 @@ def scrape_places_streamlit(
 ):
     places = []
 
-    if user_input.startswith("http"):
-        parsed = urllib.parse.urlparse(user_input)
-        qs = urllib.parse.parse_qs(parsed.query)
-        if "q" in qs:
-            search_title = qs["q"][0]
-        else:
-            match = re.search(r"/maps/search/([^/?]+)", user_input)
-            search_title = urllib.parse.unquote(match.group(1)) if match else "google_maps_results"
-    else:
-        search_title = user_input
-
-    output_filename = sanitize_filename(search_title) + ".csv"
-
-    # ✅ Detect Streamlit Cloud
+    # Detect Streamlit Cloud (no GUI available)
     IS_STREAMLIT_CLOUD = os.environ.get("STREAMLIT_RUNTIME", "") != ""
 
-    # ✅ Force headless True if running in Streamlit Cloud
-    launch_headless = True if IS_STREAMLIT_CLOUD else headless
+    # ✅ Force headless=True in Streamlit Cloud (ignore user checkbox)
+    if IS_STREAMLIT_CLOUD:
+        launch_headless = True
+    else:
+        launch_headless = headless
 
-    # ✅ Playwright open here
     with sync_playwright() as p:
         launch_args = ["--no-sandbox", "--disable-setuid-sandbox"]
 
         if show_system_chrome:
             try:
-                browser = p.chromium.launch(
-                    channel="chrome",
-                    headless=launch_headless,
-                    args=launch_args
-                )
+                browser = p.chromium.launch(channel="chrome", headless=launch_headless, args=launch_args)
             except:
-                browser = p.chromium.launch(
-                    headless=launch_headless,
-                    args=launch_args
-                )
+                browser = p.chromium.launch(headless=launch_headless, args=launch_args)
         else:
-            browser = p.chromium.launch(
-                headless=launch_headless,
-                args=launch_args
-            )
+            browser = p.chromium.launch(headless=launch_headless, args=launch_args)
 
         context = browser.new_context()
         page = context.new_page()
@@ -665,6 +644,7 @@ if stop:
 # - This tool is for educational/demo use. Respect websites’ terms and local laws.
 #         """
 #     )
+
 
 
 
