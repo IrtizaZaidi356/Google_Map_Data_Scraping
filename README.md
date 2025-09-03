@@ -61,17 +61,17 @@ It extracts clean, structured data from Google Maps listings and lets you **down
    
 ---
 
-## 🔧 Troubleshooting"
-  ❌ Browser not launching → disable headless mode
-  ❌ Playwright errors → run playwright install chromium
-  ❌ No results → try a full URL instead of short query
-  ❌ Duplicates → already handled by script
+## 🔧 Troubleshooting:
+  - ❌ Browser not launching → disable headless mode.
+  - ❌ Playwright errors → run playwright install chromium.
+  - ❌ No results → try a full URL instead of short query.
+  - ❌ Duplicates → already handled by script
 
 ---
 
 ## 📌 Disclaimer:
-⚠️ This tool is for educational/demo purposes only.
-Please respect Google’s Terms of Service and your local laws.
+  - ⚠️ This tool is for educational/demo purposes only.
+  - Please respect Google’s Terms of Service and your local laws.
 
 ## 👨‍💻 Credits:
   -  Developer: **SYED IRTIZA ABBAS ZAIDI**
