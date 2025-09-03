@@ -333,11 +333,18 @@ def scrape_places_streamlit(user_input:str, headless:bool, show_system_chrome:bo
 
     output_filename = sanitize_filename(search_title) + ".csv"
 
-    # Ensure Playwright browsers are installed (for Streamlit Cloud)
-    try:
-        subprocess.run(["playwright", "install", "chromium"], check=True)
-    except Exception as e:
-        print("⚠️ Playwright install skipped or already done:", e)
+    # 🚀 Streamlit Cloud fix: Always force headless in cloud
+    IS_STREAMLIT_CLOUD = os.environ.get("STREAMLIT_RUNTIME", "") != ""
+
+    launch_headless = True if IS_STREAMLIT_CLOUD else headless
+
+    if show_system_chrome:
+        try:
+            browser = p.chromium.launch(channel="chrome", headless=launch_headless)
+        except:
+            browser = p.chromium.launch(headless=launch_headless)
+    else:
+        browser = p.chromium.launch(headless=launch_headless)
 
     with sync_playwright() as p:
         if show_system_chrome:
