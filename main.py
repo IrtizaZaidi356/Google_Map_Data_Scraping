@@ -33,6 +33,8 @@ import pandas as pd
 import streamlit as st
 from playwright.sync_api import sync_playwright, Page
 
+import subprocess
+
 # ----------------------------
 # Windows asyncio fix
 # ----------------------------
@@ -330,6 +332,13 @@ def scrape_places_streamlit(user_input:str, headless:bool, show_system_chrome:bo
         search_title = user_input
 
     output_filename = sanitize_filename(search_title) + ".csv"
+
+    # Ensure Playwright browsers are installed (for Streamlit Cloud)
+    try:
+        subprocess.run(["playwright", "install", "chromium"], check=True)
+    except Exception as e:
+        print("⚠️ Playwright install skipped or already done:", e)
+
     with sync_playwright() as p:
         if show_system_chrome:
             try:
