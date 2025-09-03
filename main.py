@@ -505,7 +505,6 @@ on_cloud = os.environ.get("STREAMLIT_RUNTIME") is not None
 
 # Headless toggle (forced ON in cloud)
 if on_cloud:
-    headless = True
     st.sidebar.checkbox(
         "Run headless", 
         value=True, 
@@ -513,6 +512,7 @@ if on_cloud:
         help="Always ON in Streamlit Cloud",
         key="headless_cloud"
     )
+    headless = True   # 👈 forcefully true in cloud
 else:
     headless = st.sidebar.checkbox(
         "Run headless", 
@@ -520,6 +520,7 @@ else:
         help="Uncheck to see browser window",
         key="headless_local"
     )
+
 
 
 # System Chrome toggle
@@ -673,6 +674,7 @@ if stop:
 # - This tool is for educational/demo use. Respect websites’ terms and local laws.
 #         """
 #     )
+
 
 
 
