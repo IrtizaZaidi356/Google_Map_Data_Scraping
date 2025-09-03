@@ -33,8 +33,6 @@ import pandas as pd
 import streamlit as st
 from playwright.sync_api import sync_playwright, Page
 
-import subprocess
-
 # ----------------------------
 # Windows asyncio fix
 # ----------------------------
@@ -317,63 +315,33 @@ def go_to_next_results_page(page: Page, log: Callable[[str,str],None]) -> bool:
 # ----------------------------
 # Main scraping function
 # ----------------------------
-def scrape_places_streamlit(
-    user_input: str,
-    headless: bool,
-    show_system_chrome: bool,
-    max_listings: int,
-    scroll_delay: float,
-    should_stop: Callable,
-    log: Callable[[str, str], None]
-):
-    places = []
-
-    with sync_playwright() as p:
-    # Safe args for Cloud
-    launch_args = [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-        "--disable-software-rasterizer"
-    ]
-
-    # Detect Streamlit Cloud
-    IS_STREAMLIT_CLOUD = os.environ.get("STREAMLIT_RUNTIME", "") != ""
-    launch_headless = True if IS_STREAMLIT_CLOUD else headless
-
-    if show_system_chrome:
-        try:
-            browser = p.chromium.launch(
-                channel="chrome",
-                headless=launch_headless,
-                args=launch_args
-            )
-        except:
-            browser = p.chromium.launch(
-                headless=launch_headless,
-                args=launch_args
-            )
+def scrape_places_streamlit(user_input:str, headless:bool, show_system_chrome:bool, max_listings:int, scroll_delay:float, should_stop:Callable, log:Callable[[str,str],None]):
+    places=[]
+    if user_input.startswith("http"):
+        parsed = urllib.parse.urlparse(user_input)
+        qs = urllib.parse.parse_qs(parsed.query)
+        if "q" in qs:
+            search_title = qs["q"][0]
+        else:
+            # /search/... pattern se extract
+            match = re.search(r"/maps/search/([^/?]+)", user_input)
+            search_title = urllib.parse.unquote(match.group(1)) if match else "google_maps_results"
     else:
-        browser = p.chromium.launch(
-            headless=launch_headless,
-            args=launch_args
-        )
+        search_title = user_input
 
+    output_filename = sanitize_filename(search_title) + ".csv"
+    with sync_playwright() as p:
+        if show_system_chrome:
+            try:
+                browser = p.chromium.launch(channel="chrome", headless=headless)
+            except:
+                # Fallback: Playwright ka bundled Chromium
+                browser = p.chromium.launch(headless=headless)
+        else:
+            browser = p.chromium.launch(headless=headless)
 
-
-
-    # with sync_playwright() as p:
-    #     if show_system_chrome:
-    #         try:
-    #             browser = p.chromium.launch(channel="chrome", headless=headless)
-    #         except:
-    #             # Fallback: Playwright ka bundled Chromium
-    #             browser = p.chromium.launch(headless=headless)
-    #     else:
-    #         browser = p.chromium.launch(headless=headless)
-    #     context=browser.new_context()
-    #     page=context.new_page()
+        context=browser.new_context()
+        page=context.new_page()
         if "http" not in user_input: url=f"https://www.google.com/maps/search/{urllib.parse.quote(user_input)}"
         else: url=user_input
         page.goto(url)
@@ -654,8 +622,3 @@ if stop:
 # - This tool is for educational/demo use. Respect websites’ terms and local laws.
 #         """
 #     )
-
-
-
-
-
