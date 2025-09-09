@@ -357,10 +357,9 @@ def scrape_places_streamlit(user_input:str, headless:bool, show_system_chrome:bo
         # Browser launch (Cloud-safe)
         # ----------------------------
         if platform.system() == "Windows":
-            # Local testing: show browser if desired
-            browser = p.chromium.launch(headless=not show_system_chrome)
+            browser = p.chromium.launch(headless=not use_system_chrome)
         else:
-            # Streamlit Cloud / Linux: always headless, use bundled Chromium
+            # On Streamlit Cloud (Linux), always headless + bundled Chromium
             browser = p.chromium.launch(headless=True)
 
         context=browser.new_context()
@@ -645,4 +644,5 @@ if stop:
 # - This tool is for educational/demo use. Respect websites’ terms and local laws.
 #         """
 #     )
+
 
