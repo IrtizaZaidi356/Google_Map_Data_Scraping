@@ -1,3 +1,3 @@
-pip install playwright
-playwright install
+#!/bin/bash
+# Install Playwright browsers at build time (not runtime)
 playwright install chromium
