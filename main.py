@@ -14,7 +14,7 @@ Important:
 # Standard Python imports
 # ----------------------------
 import asyncio
-import platform
+import platform, subprocess, os
 import os
 import re
 import time
