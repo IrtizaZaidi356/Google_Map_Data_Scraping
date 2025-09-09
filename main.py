@@ -344,6 +344,14 @@ def scrape_places_streamlit(user_input:str, headless:bool, show_system_chrome:bo
         search_title = user_input
 
     output_filename = sanitize_filename(search_title) + ".csv"
+
+    # Extra safety: force install at runtime if missing
+    def ensure_playwright_browsers():
+        chromium_path = os.path.expanduser("~/.cache/ms-playwright")
+        if not os.path.exists(chromium_path):
+            subprocess.run(["playwright", "install", "chromium"], check=True)
+    
+    ensure_playwright_browsers()
     with sync_playwright() as p:
         # if show_system_chrome:
         #     try:
@@ -357,10 +365,9 @@ def scrape_places_streamlit(user_input:str, headless:bool, show_system_chrome:bo
         # Browser launch (Cloud-safe)
         # ----------------------------
         if platform.system() == "Windows":
-            browser = p.chromium.launch(headless=not use_system_chrome)
+        browser = p.chromium.launch(headless=False)  # for local dev
         else:
-            # On Streamlit Cloud (Linux), always headless + bundled Chromium
-            browser = p.chromium.launch(headless=True)
+            browser = p.chromium.launch(headless=True)   # Streamlit Cloud
 
         context=browser.new_context()
         page=context.new_page()
@@ -644,5 +651,6 @@ if stop:
 # - This tool is for educational/demo use. Respect websites’ terms and local laws.
 #         """
 #     )
+
 
 
