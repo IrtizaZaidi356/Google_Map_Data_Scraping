@@ -365,7 +365,7 @@ def scrape_places_streamlit(user_input:str, headless:bool, show_system_chrome:bo
         # Browser launch (Cloud-safe)
         # ----------------------------
         if platform.system() == "Windows":
-        browser = p.chromium.launch(headless=False)  # for local dev
+            browser = p.chromium.launch(headless=False)  # for local dev
         else:
             browser = p.chromium.launch(headless=True)   # Streamlit Cloud
 
@@ -651,6 +651,7 @@ if stop:
 # - This tool is for educational/demo use. Respect websites’ terms and local laws.
 #         """
 #     )
+
 
 
 
