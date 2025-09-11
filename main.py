@@ -78,6 +78,7 @@ class Place:
     latitude: float = 0.0
     longitude: float = 0.0
     city: str = ""
+    state: str = ""
     zip_code: str = ""
     country: str = ""
     monday_hours: str = ""
@@ -110,34 +111,37 @@ def sanitize_filename(name: str) -> str:
 
 
 def parse_address_parts(address: str):
-
     cleaned = re.sub(r'[^\x00-\x7F]+', '', (address or "")).strip()
     parts = [p.strip() for p in cleaned.split(',') if p.strip()]
-    city, zip_code, country = "-", "-", "-"
+    city, state, zip_code, country = "-", "-", "-", "-"
 
     if not parts:
-        return city, zip_code, country
+        return city, state, zip_code, country
 
-    # Detect country (if last chunk looks like a country name, not a number/code)
+    # Guess country (last part if not a postal code)
     if len(parts) >= 2 and not re.search(r'\d', parts[-1]):
         country = parts[-1]
         target = parts[-2]
+        maybe_state = parts[-3] if len(parts) >= 3 else ""
     else:
         target = parts[-1]
+        maybe_state = parts[-2] if len(parts) >= 2 else ""
 
-    # Extract postal code (UK/EU style or digit ZIP)
+    # Extract postal code
     match = re.search(r'\b([A-Z]{1,2}\d[A-Z0-9]?\s?\d[A-Z]{2}|\d{4,6})\b', target, re.IGNORECASE)
     if match:
         zip_code = match.group(1).strip()
+        # City may appear before zip
         city = re.sub(re.escape(zip_code), '', target).strip(", ").strip()
     else:
         city = target.strip()
 
-    # Normalize empties
-    city = city if city else "-"
-    zip_code = zip_code if zip_code else "-"
-    country = country if country else "-"
-    return city, zip_code, country
+    # Treat the part before city as state if it’s not numeric
+    if maybe_state and not re.search(r'\d', maybe_state):
+        state = maybe_state
+
+    return city or "-", state or "-", zip_code or "-", country or "-"
+
 
 
 
@@ -294,11 +298,17 @@ def extract_place(page: Page, user_input: str, index: int, listing_url: str) -> 
         place.latitude = 0.0
         place.longitude = 0.0
     # Split address into City / ZIP / Country using our parser
+    # Split address into City / State / ZIP / Country
     if place.address:
-        city, zip_code, country = parse_address_parts(place.address)
+        city, state, zip_code, country = parse_address_parts(place.address)
     else:
-        city, zip_code, country = "-", "-", "-"
-    place.city, place.zip_code, place.country = city, zip_code, country
+        city, state, zip_code, country = "-", "-", "-", "-"
+
+    place.city = city
+    place.state = state       # ✅ NEW
+    place.zip_code = zip_code
+    place.country = country
+
     # Try to parse weekly hours (keeps "-" if widget not present)
     parse_weekly_hours(page,place)
     # If a website exists, try to sniff social links (best-effort)
@@ -651,7 +661,3 @@ if stop:
 # - This tool is for educational/demo use. Respect websites’ terms and local laws.
 #         """
 #     )
-
-
-
-
