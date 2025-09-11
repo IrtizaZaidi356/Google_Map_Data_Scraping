@@ -111,34 +111,44 @@ def sanitize_filename(name: str) -> str:
 
 
 def parse_address_parts(address: str):
+    # remove non-ASCII for safety
     cleaned = re.sub(r'[^\x00-\x7F]+', '', (address or "")).strip()
     parts = [p.strip() for p in cleaned.split(',') if p.strip()]
+
     city, state, zip_code, country = "-", "-", "-", "-"
 
     if not parts:
         return city, state, zip_code, country
 
-    # Guess country (last part if not a postal code)
-    if len(parts) >= 2 and not re.search(r'\d', parts[-1]):
+    # ----- Country -----
+    # last part is usually country if it has no digit
+    if not re.search(r'\d', parts[-1]):
         country = parts[-1]
-        target = parts[-2]
-        maybe_state = parts[-3] if len(parts) >= 3 else ""
+        core = parts[:-1]  # everything before country
     else:
-        target = parts[-1]
-        maybe_state = parts[-2] if len(parts) >= 2 else ""
+        core = parts
 
-    # Extract postal code
-    match = re.search(r'\b([A-Z]{1,2}\d[A-Z0-9]?\s?\d[A-Z]{2}|\d{4,6})\b', target, re.IGNORECASE)
-    if match:
-        zip_code = match.group(1).strip()
-        # City may appear before zip
-        city = re.sub(re.escape(zip_code), '', target).strip(", ").strip()
+    # core example: ['1817 Ocean Front Walk', 'Venice', 'CA 90291']
+    if not core:
+        return city, state, zip_code, country
+
+    # ----- State + ZIP -----
+    # look at the last element for state code & zip
+    last = core[-1]
+    m = re.search(r'\b([A-Z]{2})\s*(\d{5}(?:-\d{4})?)?\b', last)
+    if m:
+        state = m.group(1)
+        if m.group(2):
+            zip_code = m.group(2)
+        # if there is extra text before state, keep it as city
+        before_state = last[:m.start()].strip(", ")
+        if before_state:
+            city = before_state
+        elif len(core) >= 2:
+            city = core[-2]
     else:
-        city = target.strip()
-
-    # Treat the part before city as state if it’s not numeric
-    if maybe_state and not re.search(r'\d', maybe_state):
-        state = maybe_state
+        # if no state code, assume last core part is city
+        city = last
 
     return city or "-", state or "-", zip_code or "-", country or "-"
 
@@ -661,3 +671,4 @@ if stop:
 # - This tool is for educational/demo use. Respect websites’ terms and local laws.
 #         """
 #     )
+
