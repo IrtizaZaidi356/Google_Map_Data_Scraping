@@ -532,10 +532,13 @@ def scrape_places_streamlit(user_input:str, headless:bool, show_system_chrome:bo
 # ----------------------------
 st.title("🗺️ Google Maps Scraper")
 st.sidebar.header("Settings")
-user_input = st.sidebar.text_input(
-    "Enter Google Maps search query or full URL", 
-    placeholder="e.g. dentists in Karachi OR https://www.google.com/maps/..."
+# NEW (multiline input for multiple queries)
+user_input = st.sidebar.text_area(
+    "Enter multiple Google Maps search queries or URLs (one per line)", 
+    placeholder="e.g.\nrestaurants in Lahore\nhospitals in Karachi\nhttps://www.google.com/maps/search/... "
 )
+# Convert multiline input to a queue (list)
+queries = [q.strip() for q in user_input.splitlines() if q.strip()]
 headless=st.sidebar.checkbox("Run headless",value=True)
 use_system_chrome=st.sidebar.checkbox("Use system Chrome",value=True)
 max_listings=st.sidebar.number_input("Max listings (0=unlimited)",min_value=0,value=10,step=1)
@@ -623,29 +626,39 @@ if start:
     st.session_state.stop = False
     st.session_state._logs = []
     if not user_input.strip():
-        st.warning("Please enter a Google Maps search query or URL.")
+        st.warning("Please enter at least one Google Maps search query or URL.")
     else:
-        ui_log("Launching browser…", "ok")
+        all_places = []
         try:
-            places, output_filename = scrape_places_streamlit(
-                user_input=user_input.strip(),
-                headless=headless,
-                show_system_chrome=use_system_chrome,
-                max_listings=max_listings,
-                scroll_delay=scroll_delay,
-                should_stop=should_stop,
-                log=ui_log,
-            )
+            for q in queries:   # 🔥 loop over queue
+                ui_log(f"🚀 Starting query: {q}", "ok")
+                places, output_filename = scrape_places_streamlit(
+                    user_input=q,
+                    headless=headless,
+                    show_system_chrome=use_system_chrome,
+                    max_listings=max_listings,
+                    scroll_delay=scroll_delay,
+                    should_stop=should_stop,
+                    log=ui_log,
+                )
+                all_places.extend(places)   # add results of this query
 
-            df = pd.DataFrame([asdict(p) for p in places])
-            show_results(df, output_filename)   # 👈 calling result show Function
+                if should_stop():
+                    ui_log("⏹️ User pressed Stop. Breaking queue loop...", "warn")
+                    break
 
-            # ✅ Save last results for Stop button
-            st.session_state["last_results"] = (df, output_filename)
+            # ✅ Combine all results into single DataFrame
+            df = pd.DataFrame([asdict(p) for p in all_places])
+            final_filename = "google_maps_combined_results.xlsx"
+
+            show_results(df, final_filename)   # 👈 final combined results
+
+            st.session_state["last_results"] = (df, final_filename)
 
         except Exception as e:
             ui_log(f"Fatal error: {e}", "err")
             st.error(f"❌ Scraping failed: {e}")
+
 
 # ✅ Stop button should ONLY set stop flag
 if stop:
@@ -671,4 +684,3 @@ if stop:
 # - This tool is for educational/demo use. Respect websites’ terms and local laws.
 #         """
 #     )
-
